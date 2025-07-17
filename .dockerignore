@@ -1,0 +1,25 @@
+# Ignore dotfiles
+.env
+.git
+.gitignore
+.DS_Store
+.vscode/
+
+# Node.js dependencies and build artifacts
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-lock.yaml
+
+# Client-specific ignores
+client/node_modules/
+client/dist/ # The client-build stage produces this, but we don't want to copy it from host to context
+client/build/ # In case it's used instead of dist
+
+# Docker-related files
+Dockerfile
+docker-compose.yml
+docker-compose-prod.yml
+.dockerignore
+.github/ # Ignore GitHub Actions workflow files from build context
