@@ -1,34 +1,40 @@
-name: CI/CD Pipeline - Frontend
+name: Docker Image
 
 on:
+  workflow_dispatch:
   push:
     branches:
+      - master # <- Just in case
       - main
       - develop
-    tags:
-      - 'v*.*.*' # Trigger on version tags like v1.0.0
+      - integration
+    # Push events to matching v*.*.* i.e. v1.0.0, v20.15.10, v1.2.3-alpha-1
+    # See docs/SPEC.md
+    tags: ['v*.*.*']
 
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest # The type of runner that the job will run on
-
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # Action to checkout your repository code
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3 # Sets up Docker Buildx for efficient builds
+        uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Hub # Or your preferred container registry
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }} # Your Docker Hub username (stored as a GitHub Secret)
-          password: ${{ secrets.DOCKER_PASSWORD }} # Your Docker Hub password/PAT (stored as a GitHub Secret)
-
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
       - name: Set image tag
-        id: set-image-tag # Give this step an ID to reference its outputs
+        id: set-image-tag
         run: |
           # Logic to determine the Docker image tag based on branch or tag
           TAG_SUFFIX=""
@@ -46,16 +52,16 @@ jobs:
           echo "IMAGE_TAG=${{ steps.set-image-tag.outputs.tag }}" # For debugging
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5 # Action to build and push Docker images
+        uses: docker/build-push-action@v5
         with:
-          context: . # The build context (root of your repo)
-          file: Dockerfile # Path to your Dockerfile
-          push: true # Push the image to the registry
+          context: .
+          file: ./Dockerfile
+          push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ steps.set-image-tag.outputs.tag }} # Full image tag (e.g., myusername/my-vue-app-frontend:latest)
-          target: client-prod # Build the production stage of your Dockerfile
-          cache-from: type=gha # Use GitHub Actions cache for faster builds
-          cache-to: type=gha,mode=max # Store build cache in GHA
-
-      - name: Verify image push (optional)
+          target: client-prod # Use the client-prod target from the Dockerfile
+          catch-from: type=gha
+          catch-to: type=gha,mode=max
+      
+      - name: Verify image push
         run: |
           echo "Image ${{ secrets.DOCKER_USERNAME }}/${{ steps.set-image-tag.outputs.tag }} pushed successfully."
