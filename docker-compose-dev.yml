@@ -25,6 +25,11 @@ services:
     # Replace 'your_docker_username' with your actual Docker Hub username
     # Replace 'my-vue-app-frontend:latest' with the exact tag of the image you pushed (e.g., v1.0.0)
     image: sokhay/my-vue-app-frontend:develop
+    environment:
+      # HOST environment variable is typically for dev servers.
+      # For a pre-built Nginx image, it's not usually needed.
+      # If your image's CMD still runs a dev server, it might be relevant.
+      HOST: 0.0.0.0
     labels:
       - traefik.enable=true
       - traefik.http.routers.client.rule=Host(`localhost`)
