@@ -58,7 +58,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ steps.set-image-tag.outputs.tag }} # Full image tag (e.g., myusername/my-vue-app-frontend:latest)
-          target: client-prod # Use the client-prod target from the Dockerfile
+          target: client-dev # Use the client-prod or client-dev target from the Dockerfile
           catch-from: type=gha
           catch-to: type=gha,mode=max
       
